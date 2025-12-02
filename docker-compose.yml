@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  blog-translate:
+    build: .
+    container_name: blog-translate-app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+    restart: unless-stopped
+

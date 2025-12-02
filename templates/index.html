@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Blog Translator - First Cloud Journey</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header style="background: rgb(30, 46, 62); color: white; padding: 0px; width: 100vw; box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 10px; height: 65px; display: flex; align-items: center; justify-content: center; position: fixed; top: 0px; left: 0px; right: 0px; z-index: 1000;">
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%; max-width: 1400px; margin: 0px auto; padding: 0 20px;">
+            <img 
+                alt="First Cloud AI Journey Logo" 
+                loading="lazy" 
+                width="200" 
+                height="45" 
+                decoding="async" 
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                style="color: transparent; height: 45px; width: auto; object-fit: contain; cursor: pointer;"
+                onerror="this.src='https://000017.awsstudygroup.com/img/FCJ-logo.png?v=2'"
+            >
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <!-- Page Title Section -->
+        <div class="page-header">
+            <h1 class="page-title">AWS BLOG TRANSLATOR</h1>
+            <p class="page-subtitle">Công cụ dịch bài viết AWS Blog sang tiếng Việt với định dạng Markdown</p>
+        </div>
+
+        <!-- API Key Configuration Button -->
+        <div class="api-config-bar">
+            <button id="openConfigModal" class="config-button">
+                <i class="fas fa-cog"></i>
+                <span id="configButtonText">Cấu hình API Key</span>
+            </button>
+            <span id="apiConfigStatus" class="config-status not-configured">
+                <i class="fas fa-exclamation-circle"></i> Chưa cấu hình
+            </span>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="translate">
+                <i class="fas fa-language"></i>
+                Dịch Blog
+            </button>
+            <button class="tab-btn" data-tab="summarize">
+                <i class="fas fa-file-alt"></i>
+                Tóm tắt cho Facebook
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-wrapper">
+            <!-- Tab: Translate -->
+            <div id="translateTab" class="tab-content active">
+
+            <!-- Input Card -->
+            <div class="input-card">
+                <div class="input-card-header">
+                    <i class="fas fa-link"></i>
+                    <span>URL bài viết AWS Blog</span>
+                </div>
+                <div class="input-card-body">
+                    <input 
+                        type="url" 
+                        id="blogUrl" 
+                        class="url-input-field" 
+                        placeholder="Nhập URL bài viết (ví dụ: https://aws.amazon.com/blogs/...)"
+                        autocomplete="off"
+                    >
+                    <button id="translateBtn" class="primary-button">
+                        <i class="fas fa-language"></i>
+                        Dịch bài viết
+                    </button>
+                </div>
+            </div>
+
+            <!-- Log Display - Independent Section -->
+            <div id="logSection" class="log-section hidden">
+                <div class="log-container">
+                    <div class="log-header">
+                        <div>
+                            <i class="fas fa-terminal"></i>
+                            <span>Process Log</span>
+                        </div>
+                        <div class="log-status">
+                            <span id="logStatus" class="log-status-badge">Processing...</span>
+                        </div>
+                    </div>
+                    <div id="logContent" class="log-content"></div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingSection" class="status-card hidden">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+                <p class="status-text">Đang xử lý bài viết...</p>
+                <p class="status-subtext">Quá trình này có thể mất vài phút. Vui lòng đợi.</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorSection" class="status-card error-card hidden">
+                <div class="status-icon error-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p class="status-text" id="errorText"></p>
+                <button class="secondary-button" onclick="resetForm()">
+                    <i class="fas fa-redo"></i>
+                    Thử lại
+                </button>
+            </div>
+
+            <!-- Result Section -->
+            <div id="resultSection" class="result-card hidden">
+                <div class="result-card-header">
+                    <div class="result-title-section">
+                        <i class="fas fa-check-circle success-icon"></i>
+                        <h2 class="result-title">Kết quả dịch</h2>
+                    </div>
+                    <div class="result-actions">
+                        <button id="copyBtn" class="action-button copy-button">
+                            <i class="fas fa-copy"></i>
+                            Copy
+                        </button>
+                        <button id="downloadBtn" class="action-button download-button">
+                            <i class="fas fa-download"></i>
+                            Tải xuống
+                        </button>
+                        <button onclick="resetForm()" class="action-button new-button">
+                            <i class="fas fa-plus"></i>
+                            Dịch bài mới
+                        </button>
+                    </div>
+                </div>
+                <div class="result-card-body">
+                    <div class="markdown-preview">
+                        <pre id="markdownContent" class="markdown-text"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            </div>
+            <!-- End Tab: Translate -->
+
+            <!-- Tab: Summarize for Facebook -->
+            <div id="summarizeTab" class="tab-content">
+                <!-- Markdown Input Card -->
+                <div class="input-card">
+                    <div class="input-card-header">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Nội dung Markdown đã dịch</span>
+                    </div>
+                    <div class="input-card-body">
+                        <textarea 
+                            id="markdownInput" 
+                            class="markdown-textarea" 
+                            placeholder="Paste nội dung Markdown bài viết đã dịch vào đây..."
+                            rows="10"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Links Input Card -->
+                <div class="input-card">
+                    <div class="input-card-header">
+                        <i class="fas fa-link"></i>
+                        <span>Thông tin bổ sung</span>
+                    </div>
+                    <div class="input-card-body">
+                        <div class="form-group">
+                            <label for="originalLink">
+                                <i class="fas fa-external-link-alt"></i> Link bài viết gốc <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="url" 
+                                id="originalLink" 
+                                class="url-input-field" 
+                                placeholder="https://aws.amazon.com/blogs/..."
+                                autocomplete="off"
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="translatedLink">
+                                <i class="fas fa-globe"></i> Link bản dịch (AWS Study Group) <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="url" 
+                                id="translatedLink" 
+                                class="url-input-field" 
+                                placeholder="https://000017.awsstudygroup.com/..."
+                                autocomplete="off"
+                                required
+                            >
+                        </div>
+                        <button id="summarizeBtn" class="primary-button">
+                            <i class="fas fa-magic"></i>
+                            Tạo tóm tắt Facebook
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Log Display for Summarize -->
+                <div id="logSectionSummarize" class="log-section hidden">
+                    <div class="log-container">
+                        <div class="log-header">
+                            <div>
+                                <i class="fas fa-terminal"></i>
+                                <span>Process Log</span>
+                            </div>
+                            <div class="log-status">
+                                <span id="logStatusSummarize" class="log-status-badge">Processing...</span>
+                            </div>
+                        </div>
+                        <div id="logContentSummarize" class="log-content"></div>
+                    </div>
+                </div>
+
+                <!-- Loading State for Summarize -->
+                <div id="loadingSectionSummarize" class="status-card hidden">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                    <p class="status-text">Đang tạo tóm tắt...</p>
+                    <p class="status-subtext">Vui lòng đợi trong giây lát.</p>
+                </div>
+
+                <!-- Error State for Summarize -->
+                <div id="errorSectionSummarize" class="status-card error-card hidden">
+                    <div class="status-icon error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <p class="status-text" id="errorTextSummarize"></p>
+                    <button class="secondary-button" onclick="resetSummarizeForm()">
+                        <i class="fas fa-redo"></i>
+                        Thử lại
+                    </button>
+                </div>
+
+                <!-- Result Section for Summarize -->
+                <div id="resultSectionSummarize" class="result-card hidden">
+                    <div class="result-card-header">
+                        <div class="result-title-section">
+                            <i class="fas fa-check-circle success-icon"></i>
+                            <h2 class="result-title">Tóm tắt Facebook</h2>
+                        </div>
+                        <div class="result-actions">
+                            <button id="copyBtnSummarize" class="action-button copy-button">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                            <button id="downloadBtnSummarize" class="action-button download-button">
+                                <i class="fas fa-download"></i>
+                                Tải xuống
+                            </button>
+                            <button onclick="resetSummarizeForm()" class="action-button new-button">
+                                <i class="fas fa-plus"></i>
+                                Tóm tắt mới
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-card-body">
+                        <div class="markdown-preview">
+                            <pre id="summaryContent" class="markdown-text"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Tab: Summarize -->
+
+        <!-- Footer -->
+        <footer class="page-footer">
+            <p>© 2025 Internal tool by First Cloud AI Journey teams</p>
+        </footer>
+    </div>
+
+    <!-- API Key Configuration Modal -->
+    <div id="configModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Cấu hình Google Gemini API</h2>
+                <button id="closeConfigModal" class="modal-close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- API Key Input -->
+                <div class="form-group">
+                    <label for="apiKeyInput">
+                        <i class="fas fa-key"></i> API Key <span class="required">*</span>
+                    </label>
+                    <div class="api-key-input-wrapper">
+                        <input 
+                            type="password" 
+                            id="apiKeyInput" 
+                            class="url-input-field" 
+                            placeholder="Nhập Google Gemini API Key (bắt buộc)"
+                            autocomplete="off"
+                            required
+                        >
+                        <button id="toggleApiKeyVisibility" class="icon-button" title="Hiện/Ẩn API Key" type="button">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="model-info">
+                        <i class="fas fa-robot"></i> Sử dụng model: <strong>Gemini 2.5 Pro</strong>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="api-key-info">
+                    <p><i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong></p>
+                    <ul>
+                        <li>API Key là <strong>bắt buộc</strong> để sử dụng công cụ</li>
+                        <li>API Key được lưu an toàn trên trình duyệt của bạn (localStorage)</li>
+                        <li>Lấy API Key miễn phí tại: <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveApiKey" class="secondary-button">
+                    <i class="fas fa-save"></i>
+                    Lưu cấu hình
+                </button>
+                <button id="clearApiKey" class="tertiary-button">
+                    <i class="fas fa-trash"></i>
+                    Xóa cấu hình
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
+
