@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # --- CẤU HÌNH ---
-DEFAULT_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyAMiUD92SWAbcSXPus8PC4LODJUTUxENdk")
+DEFAULT_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # Cấu hình Model
 generation_config = {
@@ -45,6 +45,9 @@ Cấu trúc Heading phải được map lại để phù hợp với giao diện
 - Thẻ `<h3>` chuyển thành `####` (Heading 4).
 - Thẻ `<h4>` (và nhỏ hơn) chuyển thành đoạn văn bản in đậm (**Bold Text**), không dùng thẻ heading.
 - Các thẻ `<h1>`, `<h2>`, `<h3>` không cần tô đậm (**Bold Text**) chỉ cần chuyển thành #, ###, ####.
+- Header luôn ở đầu bài viết là "#" luôn ở đầu: Ví dụ:
++ "# Giới thiệu AWS Infrastructure as Code MCP Server: Hỗ trợ CDK và CloudFormation bằng AI" luôn ở đầu.
++ Tiếp theo sẽ là phần tác giả và bài viết.
 
 ### 3. QUY TẮC DỊCH THUẬT & TỪ VỰNG
 - **Phong cách:** Dịch sang tiếng Việt trôi chảy, giọng văn chuyên nghiệp, kỹ thuật (Technical Writing). Tránh văn phong "word-by-word" máy móc.
