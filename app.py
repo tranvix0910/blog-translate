@@ -92,7 +92,7 @@ Cấu trúc Heading phải được map lại để phù hợp với giao diện
 - Bắt đầu ngay bằng tiêu đề bài viết (# Title).
 """
 
-def create_model(api_key, model_name="gemini-2.5-pro"):
+def create_model(api_key, model_name="gemini-2.5-flash"):
     """Tạo model với API key và tên model được chỉ định"""
     genai.configure(api_key=api_key)
     
@@ -141,7 +141,7 @@ def translate_blog():
         data = request.get_json()
         url = data.get('url', '').strip()
         user_api_key = data.get('api_key', '').strip()
-        model_name = data.get('model', '').strip() or 'gemini-2.5-pro'
+        model_name = data.get('model', '').strip() or 'gemini-2.5-flash'
         
         # Validate required fields
         if not user_api_key:
@@ -231,7 +231,7 @@ def summarize_blog():
         original_link = data.get('original_link', '').strip()
         translated_link = data.get('translated_link', '').strip()
         user_api_key = data.get('api_key', '').strip()
-        model_name = data.get('model', '').strip() or 'gemini-2.5-pro'
+        model_name = data.get('model', '').strip() or 'gemini-2.5-flash'
         
         # Validate required fields
         if not user_api_key:
