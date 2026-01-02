@@ -48,7 +48,7 @@ const configButtonText = document.getElementById('configButtonText');
 let currentMarkdown = '';
 let currentSummary = '';
 const API_KEY_STORAGE_KEY = 'gemini_api_key';
-const DEFAULT_MODEL = 'gemini-2.5-pro';
+const DEFAULT_MODEL = 'gemini-2.5-flash';
 
 // Log Functions
 function showLogSection() {
@@ -131,76 +131,76 @@ document.addEventListener('keydown', (e) => {
 // Main translate function
 async function handleTranslate() {
     const url = blogUrlInput.value.trim();
-    
+
     // Check if API Key is configured
     const userApiKey = getUserApiKey();
-    
+
     if (!userApiKey) {
         showError('⚠️ Vui lòng cấu hình API Key trước khi dịch bài viết!');
         openModal();
         apiKeyInput.focus();
         return;
     }
-    
+
     // Validate URL
     if (!url) {
         showError('Vui lòng nhập URL bài viết');
         return;
     }
-    
+
     if (!isValidUrl(url)) {
         showError('URL không hợp lệ. Vui lòng nhập URL đầy đủ (bắt đầu bằng http:// hoặc https://)');
         return;
     }
-    
+
     // Show loading state and log section
     showLoading();
     showLogSection();
     clearLogs();
-    
+
     // Add initial logs
     addLog('🚀 Bắt đầu quá trình dịch bài viết...', 'info');
     addLog(`📝 URL: ${url}`, 'info');
     addLog('⏳ Đang tải nội dung từ AWS Blog...', 'info');
-    
+
     try {
         const startTime = Date.now();
-        
+
         const response = await fetch('/translate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 url: url,
                 api_key: userApiKey,
                 model: DEFAULT_MODEL
             }),
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-            
+
             // Add success logs
             addLog('✅ Tải nội dung HTML thành công', 'success');
-            addLog('🤖 Đang gửi request đến Gemini 2.5 Pro...', 'info');
+            addLog('🤖 Đang gửi request đến Gemini 2.5 Flash...', 'info');
             addLog('📊 Đang xử lý và dịch nội dung...', 'info');
-            
+
             // Show metadata if available
             if (data.metadata) {
                 addLog(`📏 Kích thước HTML: ${data.metadata.html_size} ký tự (~${data.metadata.estimated_tokens} tokens)`, 'info');
                 addLog(`📄 Kết quả dịch: ${data.metadata.output_size} ký tự`, 'info');
                 addLog(`⚙️ Finish reason: ${data.metadata.finish_reason_text || data.metadata.finish_reason}`, 'info');
             }
-            
+
             addLog(`✅ Hoàn thành! Thời gian xử lý: ${duration}s`, 'success');
             updateLogStatus('completed');
-            
+
             currentMarkdown = data.markdown;
             showResult(data.markdown);
-            
+
             // Hiển thị cảnh báo nếu bài viết bị cắt ngắn
             if (data.warning) {
                 addLog(`⚠️ ${data.warning}`, 'warning');
@@ -223,12 +223,12 @@ async function handleTranslate() {
 async function handleCopy() {
     try {
         await navigator.clipboard.writeText(currentMarkdown);
-        
+
         // Update button state
         const originalHTML = copyBtn.innerHTML;
         copyBtn.innerHTML = '<i class="fas fa-check"></i> Đã copy!';
         copyBtn.classList.add('copied');
-        
+
         setTimeout(() => {
             copyBtn.innerHTML = originalHTML;
             copyBtn.classList.remove('copied');
@@ -262,11 +262,11 @@ function handleDownload() {
     const blob = new Blob([currentMarkdown], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    
+
     // Generate filename from date
     const date = new Date();
     const filename = `aws-blog-translated-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}.md`;
-    
+
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
@@ -302,7 +302,7 @@ function showWarning(message) {
     warningDiv.className = 'warning-banner';
     warningDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
     warningDiv.style.cssText = 'background: #fff3cd; color: #856404; padding: 12px 20px; border-left: 4px solid #ffc107; margin-bottom: 15px; border-radius: 4px; display: flex; align-items: center; gap: 10px;';
-    
+
     const resultBody = resultSection.querySelector('.result-card-body');
     resultBody.insertBefore(warningDiv, resultBody.firstChild);
 }
@@ -356,34 +356,34 @@ function togglePasswordVisibility() {
 
 function handleSaveApiKey() {
     const apiKey = apiKeyInput.value.trim();
-    
+
     if (!apiKey) {
         alert('⚠️ Vui lòng nhập API Key');
         apiKeyInput.focus();
         return;
     }
-    
+
     // Validate API Key format (basic check)
     if (!apiKey.startsWith('AIza') || apiKey.length < 30) {
         alert('❌ API Key không hợp lệ.\n\nAPI Key của Google AI thường:\n• Bắt đầu bằng "AIza"\n• Dài hơn 30 ký tự\n\nVui lòng kiểm tra lại!');
         apiKeyInput.focus();
         return;
     }
-    
+
     // Save API Key to localStorage
     localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-    
+
     // Show success message
     const originalHTML = saveApiKey.innerHTML;
     saveApiKey.innerHTML = '<i class="fas fa-check"></i> Đã lưu!';
     saveApiKey.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-    
+
     setTimeout(() => {
         saveApiKey.innerHTML = originalHTML;
         saveApiKey.style.background = '';
         closeModal(); // Close modal after success
     }, 1500);
-    
+
     // Update status badge
     updateApiKeyStatus();
 }
@@ -392,38 +392,38 @@ function handleClearApiKey() {
     if (!confirm('🗑️ Bạn có chắc muốn xóa API Key đã lưu?\n\nSau khi xóa, bạn cần nhập lại API Key để sử dụng.')) {
         return;
     }
-    
+
     // Clear from localStorage
     localStorage.removeItem(API_KEY_STORAGE_KEY);
-    
+
     // Reset UI
     apiKeyInput.value = '';
-    
+
     // Show success message
     const originalHTML = clearApiKey.innerHTML;
     clearApiKey.innerHTML = '<i class="fas fa-check"></i> Đã xóa!';
-    
+
     setTimeout(() => {
         clearApiKey.innerHTML = originalHTML;
     }, 2000);
-    
+
     // Update status badge
     updateApiKeyStatus();
 }
 
 function loadSavedConfig() {
     const savedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    
+
     if (savedApiKey) {
         apiKeyInput.value = savedApiKey;
     }
-    
+
     updateApiKeyStatus();
 }
 
 function updateApiKeyStatus() {
     const savedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    
+
     if (savedApiKey) {
         apiConfigStatus.className = 'config-status configured';
         apiConfigStatus.innerHTML = '<i class="fas fa-check-circle"></i> Đã cấu hình';
@@ -449,7 +449,7 @@ function switchTab(tabName) {
             btn.classList.remove('active');
         }
     });
-    
+
     // Update tab content
     if (tabName === 'translate') {
         translateTab.classList.add('active');
@@ -465,7 +465,7 @@ async function handleSummarize() {
     const markdown = markdownInput.value.trim();
     const origLink = originalLink.value.trim();
     const transLink = translatedLink.value.trim();
-    
+
     // Check API Key
     const userApiKey = getUserApiKey();
     if (!userApiKey) {
@@ -474,38 +474,38 @@ async function handleSummarize() {
         apiKeyInput.focus();
         return;
     }
-    
+
     // Validate inputs
     if (!markdown) {
         showErrorSummarize('Vui lòng nhập nội dung Markdown');
         markdownInput.focus();
         return;
     }
-    
+
     if (!origLink || !isValidUrl(origLink)) {
         showErrorSummarize('Vui lòng nhập link bài viết gốc hợp lệ');
         originalLink.focus();
         return;
     }
-    
+
     if (!transLink || !isValidUrl(transLink)) {
         showErrorSummarize('Vui lòng nhập link bản dịch hợp lệ');
         translatedLink.focus();
         return;
     }
-    
+
     // Show loading
     showLoadingSummarize();
     showLogSectionSummarize();
     clearLogsSummarize();
-    
+
     addLogSummarize('🚀 Bắt đầu tạo tóm tắt Facebook...', 'info');
     addLogSummarize(`📝 Độ dài markdown: ${markdown.length} ký tự`, 'info');
-    addLogSummarize('🤖 Đang gửi request đến Gemini 2.5 Pro...', 'info');
-    
+    addLogSummarize('🤖 Đang gửi request đến Gemini 2.5 Flash...', 'info');
+
     try {
         const startTime = Date.now();
-        
+
         const response = await fetch('/summarize', {
             method: 'POST',
             headers: {
@@ -519,12 +519,12 @@ async function handleSummarize() {
                 model: DEFAULT_MODEL
             }),
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-            
+
             addLogSummarize('✅ Tạo tóm tắt thành công', 'success');
             if (data.metadata) {
                 addLogSummarize(`📄 Kết quả: ${data.metadata.output_size} ký tự`, 'info');
@@ -532,10 +532,10 @@ async function handleSummarize() {
             }
             addLogSummarize(`✅ Hoàn thành! Thời gian xử lý: ${duration}s`, 'success');
             updateLogStatusSummarize('completed');
-            
+
             currentSummary = data.summary;
             showResultSummarize(data.summary);
-            
+
             if (data.warning) {
                 addLogSummarize(`⚠️ ${data.warning}`, 'warning');
             }
@@ -555,11 +555,11 @@ async function handleSummarize() {
 async function handleCopySummary() {
     try {
         await navigator.clipboard.writeText(currentSummary);
-        
+
         const originalHTML = copyBtnSummarize.innerHTML;
         copyBtnSummarize.innerHTML = '<i class="fas fa-check"></i> Đã copy!';
         copyBtnSummarize.classList.add('copied');
-        
+
         setTimeout(() => {
             copyBtnSummarize.innerHTML = originalHTML;
             copyBtnSummarize.classList.remove('copied');
@@ -573,10 +573,10 @@ function handleDownloadSummary() {
     const blob = new Blob([currentSummary], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    
+
     const date = new Date();
     const filename = `facebook-summary-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}.txt`;
-    
+
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
@@ -663,7 +663,7 @@ function clearLogsSummarize() {
 // Auto-focus input on load
 window.addEventListener('load', () => {
     loadSavedConfig();
-    
+
     // Focus on appropriate input
     const savedApiKey = getUserApiKey();
     if (savedApiKey) {
